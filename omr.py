@@ -26,7 +26,7 @@ FILTER_SIZE = 4
 
 
 
-def separate_columns(arr, row=True):
+def separate_columns(p, arr, row=True):
     i = 0
     arr = np.array(arr)
     # if not row:
@@ -39,7 +39,7 @@ def separate_columns(arr, row=True):
             else:
                 idx = len(arr)
             if row:
-                thresh = len(arr)/200.
+                thresh = len(arr)/250.
             else:
                 thresh = len(arr)/100.
             if idx> thresh or row:
@@ -51,7 +51,7 @@ def separate_columns(arr, row=True):
 #        print i
     idxs = []
     for i in range(1, len(res)-1, 2):
-        idxs.append((res[i], res[i+1]))
+        idxs.append([res[i], res[i+1]])
     if row:
         rows = []
         for idx in idxs:
@@ -77,43 +77,53 @@ FILTER_SIZE = p.shape[0]/400.
 #########################
 # Separate border of test
 m, n = p.shape
-rows_diff = [0]*m
+#rows_diff = [0]*m
 cols_diff = [0]*n
 
 for i in range(m-1):
     for j in range(n-1):
-        rows_diff[i] += abs(p[i, j] - p[i, j+1])
+#        rows_diff[i] += abs(p[i, j] - p[i, j+1])
         cols_diff[j] += abs(p[i, j] - p[i+1, j])
 
 
-rows, row_idx = separate_columns(rows_diff, row=True)
-cols, col_idx = separate_columns(cols_diff, row=False)
+cols, col_idx = separate_columns(p, cols_diff, row=False)
+#rows, row_idx = separate_columns(rows_diff, row=True)
 
-n_cols = 0
-min_bound = rows[0].shape[1]
-max_bound = 0
+#n_cols = 0
+#min_bound = rows[0].shape[1]
+#max_bound = 0
 
-# for row in rows:
-#    diff = 0
-#    for i in range(row.shape[1]-1):
-#        r = row.shape[0]/2
-#        diff += abs(row[r, i+1] - row[r, i])
-#    if n_cols < diff/2:
-#        n_cols = diff/2
-#    ones = np.where(row[r]==1)[0]
-#    if ones[0] < min_bound:
-#        min_bound = ones[0]
-#    if ones[-1] > max_bound:
-#        max_bound = ones[-1]
-#    n_cols.append(diff/2)
+
+rows_diffs = []
+rows = []
+rows_idx = []
+for c in cols:
+    rows_diff = [0]*m
+    for i in range(c.shape[0]-1):
+        for j in range(c.shape[1]-1):
+            rows_diff[i] += abs(c[i, j] - c[i, j+1])
+    r, r_idx = separate_columns(c, rows_diff, row=True)
+#    rows.append(r)
+    rows_idx.append(r_idx)
+    rows_diffs.append(rows_diff)
+    
+H = []
+for i in range(len(rows_idx)):
+    H.append(np.mean([j[1]-j[0] for j in rows_idx[i]]))
+height = np.mean(H)
+
+for c in cols:
+    c.reshape(())
+
 
 n_cols = len(cols)
-n_rows = len(rows)
+#n_rows = len(rows)
 
 ####################
 # Separate questions
-height = np.mean(np.array([r.shape[0] for r in rows]))
 width = np.mean(np.array([c.shape[1] for c in cols]))
+#height = np.mean(np.array([r.shape[0] for r in rows]))
+
 
 
 # q = []
@@ -121,23 +131,23 @@ width = np.mean(np.array([c.shape[1] for c in cols]))
 #     for i in range(n_cols):
 #         q.append(r[:, int(i*width):int((i+1)*width)])
 
-questions = []
-for c in cols:
-    for idx in row_idx:
-        questions.append(c[idx[0]:idx[1], :])
-
-
-predict = []
-for q in questions:
-    max_area = 0
-    max_idx = -1
-    l = q.shape[1]
-    for i in range(4):
-        area = np.sum(q[:, i*l/4:(i+1)*l/4])
-        if area > max_area:
-            max_area = area
-            max_idx = i + 1
-    predict.append(max_idx)
+#questions = []
+#for c in cols:
+#    for idx in row_idx:
+#        questions.append(c[idx[0]:idx[1], :])
+#
+#
+#predict = []
+#for q in questions:
+#    max_area = 0
+#    max_idx = -1
+#    l = q.shape[1]
+#    for i in range(4):
+#        area = np.sum(q[:, i*l/4:(i+1)*l/4])
+#        if area > max_area:
+#            max_area = area
+#            max_idx = i + 1
+#    predict.append(max_idx)
 
 
 
